@@ -1,4 +1,3 @@
-
 package com.iosbridge.container
 
 import java.io.File
@@ -25,7 +24,7 @@ object ArchiveAnalyzer {
     fun inspect(file: File): ArchiveResult {
 
         if (!file.exists() || !file.isFile) {
-            return failure("Archive file does not exist.")
+            return failure("压缩包文件不存在。")
         }
 
         return try {
@@ -76,12 +75,12 @@ object ArchiveAnalyzer {
                     totalFiles = totalFiles,
                     totalDirectories = totalDirectories,
                     totalSize = totalSize,
-                    message = "Archive inspected successfully."
+                    message = "压缩包分析成功。"
                 )
             }
 
         } catch (e: Exception) {
-            failure("Archive inspection failed: ${e.message}")
+            failure("压缩包分析失败：${e.message}")
         }
     }
 
