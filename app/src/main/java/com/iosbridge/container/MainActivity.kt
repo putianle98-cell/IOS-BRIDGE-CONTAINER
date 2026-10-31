@@ -489,9 +489,6 @@ val cpuFeatureReport = try {
     "读取失败：${e.javaClass.simpleName}"
 }
 
-    "$path：$status"
-}
-
     val kvmStatus = when {
         !kvmFile.exists() -> "未发现 /dev/kvm"
         !kvmFile.canRead() || !kvmFile.canWrite() ->
