@@ -67,7 +67,7 @@ val bundlePath = appEntry?.name
 
     if (!ipaFile.exists() ||
         !ipaFile.isFile ||
-        ipaFile.extension.lowercase() != "ipa"
+        !ipaFile.extension.equals("ipa", ignoreCase = true)
     ) {
         return null
     }
@@ -75,37 +75,32 @@ val bundlePath = appEntry?.name
     return try {
         ZipFile(ipaFile).use { zip ->
 
-            val entries = zip.entries()
+            val entries = zip.entries().asSequence().toList()
 
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
+            val plistEntry = entries.firstOrNull { entry ->
+                !entry.isDirectory &&
+                entry.name.startsWith("Payload/") &&
+                entry.name.contains(".app/") &&
+                entry.name.substringAfter(".app/")
+                    .substringBefore("/") == "Info.plist"
+            } ?: return@use null
 
-                if (entry.isDirectory ||
-                    !entry.name.startsWith("Payload/") ||
-                    !entry.name.endsWith(".app/Info.plist")
-                ) {
-                    continue
-                }
+            val tempFile = File.createTempFile(
+                "iosbridge_",
+                ".plist"
+            )
 
-                val tempFile = File.createTempFile(
-                    "iosbridge_",
-                    ".plist"
-                )
-
-                try {
-                    zip.getInputStream(entry).use { input ->
-                        tempFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
+            try {
+                zip.getInputStream(plistEntry).use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
                     }
-
-                    return PlistAnalyzer.analyzeIOSApp(tempFile)
-                } finally {
-                    tempFile.delete()
                 }
-            }
 
-            null
+                PlistAnalyzer.analyzeIOSApp(tempFile)
+            } finally {
+                tempFile.delete()
+            }
         }
     } catch (_: Exception) {
         null
