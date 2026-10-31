@@ -295,89 +295,112 @@ root.addView(
         return file
     }
 
-    private fun refreshFiles() {
-        fileList.removeAllViews()
+    
+private fun refreshFiles() {
+    fileList.removeAllViews()
 
-        val files = containerDir.listFiles()
-            ?.filter { it.isFile }
-            ?.sortedByDescending { it.lastModified() }
-            ?: emptyList()
-
-        if (files.isEmpty()) {
-            val empty = TextView(this).apply {
-                text = "暂无文件\n\n导入你的第一个 iOS 文件"
-                textSize = 14f
-                gravity = Gravity.CENTER
-                setTextColor(Color.LTGRAY)
-                setPadding(12, 55, 12, 55)
-            }
-
-            fileList.addView(empty)
-            statusText.text = "容器中已有 0 个文件"
-            return
-        }
-
-        for (file in files) {
-            val analysis = try {
-                FileAnalyzer.analyze(file)
-            } catch (_: Exception) {
-                null
-            }
-
-            val format = analysis?.format ?: "UNKNOWN"
-            val size = analysis?.size ?: "未知大小"
-
-            val item = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(18, 16, 18, 16)
-                setBackgroundColor(Color.rgb(27, 39, 53))
-
-                setOnClickListener {
-                    val previewIntent = Intent(
-                        this@MainActivity,
-                        FilePreviewActivity::class.java
-                    ).apply {
-                        putExtra("file_path", file.absolutePath)
-                    }
-
-                    startActivity(previewIntent)
-                }
-            }
-
-            val nameView = TextView(this).apply {
-                text = "📄  ${file.name}"
-                textSize = 15f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-            }
-
-            val formatView = TextView(this).apply {
-                text = "文件格式：$format"
-                textSize = 12f
-                setTextColor(Color.rgb(54, 185, 246))
-                setPadding(0, 9, 0, 0)
-            }
-
-            val sizeView = TextView(this).apply {
-                text = "文件大小：$size"
-                textSize = 12f
-                setTextColor(Color.LTGRAY)
-                setPadding(0, 5, 0, 0)
-            }
-
-            item.addView(nameView)
-            item.addView(formatView)
-            item.addView(sizeView)
-
-            val params = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-
-            params.bottomMargin = 12
-            fileList.addView(item, params)
-        }
-
-        statusText.text = "容器中已有 ${files.size} 个文件"
+    val keyword = if (::searchInput.isInitialized) {
+        searchInput.text.toString().trim()
+    } else {
+        ""
     }
+
+    val allFiles = containerDir.listFiles()
+        ?.filter { it.isFile }
+        ?: emptyList()
+
+    val filteredFiles = allFiles.filter {
+        it.name.contains(keyword, ignoreCase = true)
+    }
+
+    val files = if (sortNewestFirst) {
+        filteredFiles.sortedByDescending { it.lastModified() }
+    } else {
+        filteredFiles.sortedBy { it.lastModified() }
+    }
+
+    if (files.isEmpty()) {
+        val empty = TextView(this).apply {
+            text = if (keyword.isEmpty()) {
+                "暂无文件\n\n导入你的第一个 iOS 文件"
+            } else {
+                "没有找到匹配的文件\n\n试试其他关键词"
+            }
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(Color.LTGRAY)
+            setPadding(12, 55, 12, 55)
+        }
+
+        fileList.addView(empty)
+        statusText.text = if (keyword.isEmpty()) {
+            "容器中已有 0 个文件"
+        } else {
+            "没有找到匹配的文件"
+        }
+        return
+    }
+
+    for (file in files) {
+        val analysis = try {
+            FileAnalyzer.analyze(file)
+        } catch (_: Exception) {
+            null
+        }
+
+        val format = analysis?.format ?: "未知格式"
+        val size = analysis?.size ?: "未知大小"
+
+        val item = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(18, 16, 18, 16)
+            setBackgroundColor(Color.rgb(27, 39, 53))
+
+            setOnClickListener {
+                val previewIntent = Intent(
+                    this@MainActivity,
+                    FilePreviewActivity::class.java
+                ).apply {
+                    putExtra("file_path", file.absolutePath)
+                }
+
+                startActivity(previewIntent)
+            }
+        }
+
+        val nameView = TextView(this).apply {
+            text = "📄  ${file.name}"
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+        }
+
+        val formatView = TextView(this).apply {
+            text = "文件格式：$format"
+            textSize = 12f
+            setTextColor(Color.rgb(54, 185, 246))
+            setPadding(0, 9, 0, 0)
+        }
+
+        val sizeView = TextView(this).apply {
+            text = "文件大小：$size"
+            textSize = 12f
+            setTextColor(Color.LTGRAY)
+            setPadding(0, 5, 0, 0)
+        }
+
+        item.addView(nameView)
+        item.addView(formatView)
+        item.addView(sizeView)
+
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        params.bottomMargin = 12
+        fileList.addView(item, params)
+    }
+
+    statusText.text = "显示 ${files.size} 个文件，共 ${allFiles.size} 个文件"
 }
