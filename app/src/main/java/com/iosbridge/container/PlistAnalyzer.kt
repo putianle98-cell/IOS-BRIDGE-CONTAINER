@@ -18,11 +18,11 @@ object PlistAnalyzer {
     fun analyze(file: File): PlistResult {
 
         if (!file.exists() || !file.isFile) {
-            return failure("File does not exist.")
+            return failure("文件不存在。")
         }
 
         if (file.length() > 20L * 1024 * 1024) {
-            return failure("PLIST file exceeds 20 MB limit.")
+            return failure("PLIST 文件超过 20 MB 大小限制。")
         }
 
         return try {
@@ -92,11 +92,11 @@ object PlistAnalyzer {
                 success = true,
                 format = format,
                 entries = entries,
-                message = "PLIST parsed successfully."
+                message = "PLIST 文件解析成功。"
             )
 
         } catch (e: Exception) {
-            failure("PLIST parsing failed: ${e.message}")
+            failure("PLIST 文件解析失败：${e.message}")
         }
     }
 
