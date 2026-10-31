@@ -173,12 +173,19 @@ val bundlePath = appEntry?.name
                     fileCount++
 
                     if (relativePath.startsWith("Payload/") &&
-                        relativePath.endsWith(".app/")
-                    ) {
-                        bundlePath = relativePath
-                        appName = relativePath
-                            .removePrefix("Payload/")
-                            .removeSuffix(".app/")
+    relativePath.contains(".app/")
+) {
+    val detectedPath = relativePath
+        .substringBefore(".app/")
+        .plus(".app/")
+
+    if (bundlePath.isEmpty()) {
+        bundlePath = detectedPath
+
+        appName = detectedPath
+            .removePrefix("Payload/")
+            .removeSuffix(".app/")
+    }
                     }
                 }
             }
