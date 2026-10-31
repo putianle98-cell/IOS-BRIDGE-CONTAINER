@@ -48,7 +48,7 @@ object PlistAnalyzer {
 
                 when (value) {
                     is NSDictionary -> {
-                        val keys = value.allKeys
+                        val keys = value.allKeys()
 
                         for (childKey in keys) {
                             val childValue = value.objectForKey(childKey)
