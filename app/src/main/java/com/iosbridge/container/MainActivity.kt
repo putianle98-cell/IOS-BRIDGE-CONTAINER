@@ -332,6 +332,29 @@ root.addView(
 
     val kvmFile = File("/dev/kvm")
 
+val kvmModule = File("/sys/module/kvm")
+val kvmArmModule = File("/sys/module/kvm_arm")
+val virtualizationPaths = listOf(
+    "/dev/kvm",
+    "/dev/vhost-vsock",
+    "/sys/module/kvm",
+    "/sys/module/kvm_arm",
+    "/sys/hypervisor"
+)
+
+val virtualizationReport = virtualizationPaths.joinToString("\n") { path ->
+    val file = File(path)
+
+    val status = when {
+        !file.exists() -> "不存在或不可见"
+        file.isDirectory -> "存在（目录）"
+        file.canRead() -> "存在（可读取）"
+        else -> "存在但无法读取"
+    }
+
+    "$path：$status"
+}
+
     val kvmStatus = when {
         !kvmFile.exists() -> "未发现 /dev/kvm"
         !kvmFile.canRead() || !kvmFile.canWrite() ->
