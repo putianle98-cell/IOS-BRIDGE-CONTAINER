@@ -64,6 +64,12 @@ class MainActivity : Activity() {
                 openFilePicker()
             }
         }
+        val deviceButton = Button(this).apply {
+    text = "检测设备运行环境"
+    setOnClickListener {
+        showDeviceReport()
+    }
+         }
 
         statusText = TextView(this).apply {
             text = "容器已就绪"
@@ -91,6 +97,7 @@ class MainActivity : Activity() {
         root.addView(title)
         root.addView(subtitle)
         root.addView(importButton)
+        root.addView(deviceButton)
         root.addView(statusText)
         root.addView(section)
         
