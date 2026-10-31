@@ -1,0 +1,21 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.IOSBridge"
+        parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <item name="colorPrimary">#36B9F6</item>
+        <item name="colorPrimaryVariant">#1479B8</item>
+        <item name="colorSecondary">#00D5C8</item>
+
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#0C131D</item>
+        <item name="android:navigationBarColor">#0C131D</item>
+        <item name="android:windowBackground">#0C131D</item>
+        <item name="android:colorAccent">#36B9F6</item>
+
+    </style>
+
+</resources>
