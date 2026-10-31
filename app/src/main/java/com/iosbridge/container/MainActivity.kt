@@ -307,115 +307,174 @@ root.addView(
     }
 
     
-
-    private fun showDeviceReport() {
+   
+private fun showDeviceReport() {
     val activityManager =
         getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
 
     val memoryInfo = android.app.ActivityManager.MemoryInfo()
     activityManager.getMemoryInfo(memoryInfo)
 
-    val totalMemory =
-        memoryInfo.totalMem / (1024L * 1024L)
-
-    val availableMemory =
-        memoryInfo.availMem / (1024L * 1024L)
+    val totalMemory = memoryInfo.totalMem / (1024L * 1024L)
+    val availableMemory = memoryInfo.availMem / (1024L * 1024L)
 
     val cpuArchitecture =
         android.os.Build.SUPPORTED_ABIS.joinToString("\n")
 
-    val cpuCores =
-        Runtime.getRuntime().availableProcessors()
+    val cpuCores = Runtime.getRuntime().availableProcessors()
 
     val kernelVersion =
         System.getProperty("os.version") ?: "未知"
 
     val kvmFile = File("/dev/kvm")
 
-val kvmModule = File("/sys/module/kvm")
-val kvmArmModule = File("/sys/module/kvm_arm")
-val virtualizationPaths = listOf(
-    "/dev/kvm",
-    "/dev/vhost-vsock",
-    "/sys/module/kvm",
-    "/sys/module/kvm_arm",
-    "/sys/hypervisor"
-)
+    val virtualizationPaths = listOf(
+        "/dev/kvm",
+        "/dev/vhost-vsock",
+        "/sys/module/kvm",
+        "/sys/module/kvm_arm",
+        "/sys/hypervisor"
+    )
 
+    val virtualizationReport =
+        virtualizationPaths.joinToString("\n") { path ->
+            val file = File(path)
 
-val virtualizationReport = virtualizationPaths.joinToString("\n") { path ->
-    val file = File(path)
-
-    val status = when {
-        !file.exists() -> "不存在或不可见"
-        file.isDirectory -> "存在（目录）"
-        file.canRead() -> "存在（可读取）"
-        else -> "存在但无法读取"
-    }
-
-    "$path：$status"
-}
-
-val kernelConfigFiles = listOf(
-    File("/proc/config.gz"),
-    File("/proc/config")
-)
-
-val kernelConfigReport = buildString {
-    val configFile = kernelConfigFiles.firstOrNull {
-        it.exists() && it.canRead()
-    }
-
-    if (configFile == null) {
-        append("内核配置文件：当前应用无法读取或文件不存在")
-    } else {
-        try {
-            val lines = if (configFile.name == "config.gz") {
-                java.util.zip.GZIPInputStream(
-                    configFile.inputStream()
-                ).bufferedReader().use {
-                    it.readLines()
-                }
-            } else {
-                configFile.readLines()
+            val status = when {
+                !file.exists() -> "不存在或不可见"
+                file.isDirectory -> "存在（目录）"
+                file.canRead() -> "存在（可读取）"
+                else -> "存在但无法读取"
             }
 
-            val keys = listOf(
-                "CONFIG_KVM=",
-                "CONFIG_KVM_ARM_HOST=",
-                "CONFIG_VIRTUALIZATION="
-            )
+            "$path：$status"
+        }
 
-            for (key in keys) {
-                val result = lines.firstOrNull {
-                    it.startsWith(key) ||
-                    it.startsWith("# $key")
+    val kernelConfigFiles = listOf(
+        File("/proc/config.gz"),
+        File("/proc/config")
+    )
+
+    val kernelConfigReport = buildString {
+        val configFile = kernelConfigFiles.firstOrNull {
+            it.exists() && it.canRead()
+        }
+
+        if (configFile == null) {
+            append("内核配置文件：当前应用无法读取或文件不存在")
+        } else {
+            try {
+                val lines = if (configFile.name == "config.gz") {
+                    java.util.zip.GZIPInputStream(
+                        configFile.inputStream()
+                    ).bufferedReader().use {
+                        it.readLines()
+                    }
+                } else {
+                    configFile.readLines()
                 }
 
-                append(result ?: "$key 未找到")
-                append("\n")
+                val keys = listOf(
+                    "CONFIG_KVM=",
+                    "CONFIG_KVM_ARM_HOST=",
+                    "CONFIG_VIRTUALIZATION="
+                )
+
+                for (key in keys) {
+                    val result = lines.firstOrNull {
+                        it.startsWith(key) ||
+                        it.startsWith("# $key")
+                    }
+
+                    append(result ?: "$key 未找到")
+                    append("\n")
+                }
+            } catch (e: Exception) {
+                append("读取失败：${e.javaClass.simpleName}")
             }
-        } catch (e: Exception) {
-            append("读取失败：${e.javaClass.simpleName}")
         }
     }
-}
 
-val cpuFeatureReport = try {
-    File("/proc/cpuinfo").readLines()
-        .filter {
-            it.startsWith("Features") ||
-            it.startsWith("flags")
-        }
-        .distinct()
-        .joinToString("\n")
-        .ifBlank { "CPU 特征信息不可读取" }
-} catch (e: Exception) {
-    "读取失败：${e.javaClass.simpleName}"
-}
-
+    val cpuFeatureReport = try {
+        File("/proc/cpuinfo").readLines()
+            .filter {
+                it.startsWith("Features") ||
+                it.startsWith("flags")
+            }
+            .distinct()
+            .joinToString("\n")
+            .ifBlank { "CPU 特征信息不可读取" }
+    } catch (e: Exception) {
+        "读取失败：${e.javaClass.simpleName}"
     }
+
+    val kvmStatus = when {
+        !kvmFile.exists() -> "未发现 /dev/kvm"
+        !kvmFile.canRead() || !kvmFile.canWrite() ->
+            "存在，但当前应用无法访问"
+        else -> "存在且当前应用可读写"
+    }
+
+    val report = """
+设备型号：${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}
+
+Android 版本：${android.os.Build.VERSION.RELEASE}
+Android SDK：${android.os.Build.VERSION.SDK_INT}
+
+CPU 架构：
+$cpuArchitecture
+
+可用 CPU 核心数：$cpuCores
+
+Linux 内核版本：
+$kernelVersion
+
+总内存：${totalMemory} MB
+当前可用内存：${availableMemory} MB
+
+虚拟化设备节点：
+$kvmStatus
+
+系统虚拟化接口检查：
+$virtualizationReport
+
+内核配置检查：
+$kernelConfigReport
+
+CPU 特征信息：
+$cpuFeatureReport
+
+注意：
+以上结果仅用于初步设备环境检查，
+不能证明设备能够启动 iOS。
+    """.trimIndent()
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("设备环境检测报告")
+        .setMessage(report)
+        .setPositiveButton("确定", null)
+        .setNeutralButton("复制报告") { _, _ ->
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "设备环境检测报告",
+                    report
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "检测报告已复制",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        .show()
 }
+
 
 val cpuFeatureReport = try {
     File("/proc/cpuinfo").readLines()
