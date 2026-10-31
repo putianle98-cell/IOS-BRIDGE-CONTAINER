@@ -382,6 +382,9 @@ $kernelVersion
 虚拟化设备节点：
 $kvmStatus
 
+系统虚拟化接口检查：
+$virtualizationReport
+
 注意：
 以上结果仅用于初步设备环境检查，
 不能证明设备能够启动 iOS。
