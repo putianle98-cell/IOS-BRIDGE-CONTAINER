@@ -15,6 +15,15 @@ object PlistAnalyzer {
         val message: String
     )
 
+    data class IOSAppInfo(
+    val bundleIdentifier: String,
+    val appName: String,
+    val version: String,
+    val minimumOSVersion: String,
+    val deviceFamily: String,
+    val executable: String
+)
+
     fun analyze(file: File): PlistResult {
 
         if (!file.exists() || !file.isFile) {
@@ -100,6 +109,74 @@ object PlistAnalyzer {
         }
     }
 
+    fun analyzeIOSApp(file: File): IOSAppInfo? {
+
+    if (!file.exists() || !file.isFile) {
+        return null
+    }
+
+    if (file.length() > 20L * 1024 * 1024) {
+        return null
+    }
+
+    return try {
+        val root = PropertyListParser.parse(file)
+
+        if (root !is NSDictionary) {
+            return null
+        }
+
+        fun getString(key: String): String {
+            return root.objectForKey(key)?.toString() ?: "未知"
+        }
+
+        val familyArray =
+    root.objectForKey("UIDeviceFamily") as? NSArray
+
+val families = mutableListOf<Int>()
+
+if (familyArray != null) {
+    for (i in 0 until familyArray.count()) {
+        val value = familyArray.objectAtIndex(i)
+            .toString()
+            .toIntOrNull()
+
+        if (value != null) {
+            families.add(value)
+        }
+    }
+}
+
+val deviceFamily = when {
+    families.contains(1) && families.contains(2) ->
+        "iPhone / iPad"
+
+    families.contains(1) ->
+        "iPhone"
+
+    families.contains(2) ->
+        "iPad"
+
+    else -> "未知"
+}
+        IOSAppInfo(
+            bundleIdentifier = getString("CFBundleIdentifier"),
+            appName = getString("CFBundleDisplayName")
+                .let {
+                    if (it == "未知") getString("CFBundleName")
+                    else it
+                },
+            version = getString("CFBundleShortVersionString"),
+            minimumOSVersion = getString("MinimumOSVersion"),
+            deviceFamily = deviceFamily,
+            executable = getString("CFBundleExecutable")
+        )
+
+    } catch (_: Exception) {
+        null
+    }
+}
+    
     private fun failure(message: String): PlistResult {
         return PlistResult(
             success = false,
