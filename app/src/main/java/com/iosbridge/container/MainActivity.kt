@@ -352,6 +352,65 @@ val virtualizationReport = virtualizationPaths.joinToString("\n") { path ->
         else -> "存在但无法读取"
     }
 
+    val kernelConfigFiles = listOf(
+    File("/proc/config.gz"),
+    File("/proc/config")
+)
+
+val kernelConfigReport = buildString {
+    val configFile = kernelConfigFiles.firstOrNull {
+        it.exists() && it.canRead()
+    }
+
+    if (configFile == null) {
+        append("内核配置文件：当前应用无法读取或文件不存在")
+    } else {
+        try {
+            val lines = if (configFile.name == "config.gz") {
+                java.util.zip.GZIPInputStream(
+                    configFile.inputStream()
+                ).bufferedReader().use {
+                    it.readLines()
+                }
+            } else {
+                configFile.readLines()
+            }
+
+            val keys = listOf(
+                "CONFIG_KVM=",
+                "CONFIG_KVM_ARM_HOST=",
+                "CONFIG_VIRTUALIZATION="
+            )
+
+            for (key in keys) {
+                val result = lines.firstOrNull {
+                    it.startsWith(key) ||
+                    it.startsWith("# $key")
+                }
+
+                append(key)
+                append(result?.removePrefix(key) ?: "未找到")
+                append("\n")
+            }
+        } catch (e: Exception) {
+            append("读取失败：${e.javaClass.simpleName}")
+        }
+    }
+}
+
+val cpuFeatureReport = try {
+    File("/proc/cpuinfo").readLines()
+        .filter {
+            it.startsWith("Features") ||
+            it.startsWith("flags")
+        }
+        .distinct()
+        .joinToString("\n")
+        .ifBlank { "CPU 特征信息不可读取" }
+} catch (e: Exception) {
+    "读取失败：${e.javaClass.simpleName}"
+}
+
     "$path：$status"
 }
 
