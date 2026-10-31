@@ -271,20 +271,17 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.rgb(27, 39, 53))
 
             setOnClickListener {
-                android.app.AlertDialog.Builder(this@MainActivity)
-                    .setTitle(file.name)
-                    .setMessage(
-                        "FILE FORMAT\n$format\n\n" +
-                        "FILE SIZE\n$size\n\n" +
-                        "DESCRIPTION\n$description"
-                    )
-                    .setPositiveButton("CLOSE", null)
-                    .setNeutralButton("DELETE") { _, _ ->
-                        if (file.delete()) {
-                            refreshFiles()
-                        }
-                    }
-                    .show()
+    val intent = Intent(
+        this@MainActivity,
+        FilePreviewActivity::class.java
+    )
+
+    intent.putExtra(
+        "file_path",
+        file.absolutePath
+    )
+
+    startActivity(intent)
             }
         }
 
