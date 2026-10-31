@@ -667,6 +667,166 @@ private fun showCpuAnalysisReport() {
         .show()
 }
 
+private fun showCompatibilityReport() {
+    val activityManager =
+        getSystemService(ACTIVITY_SERVICE)
+            as android.app.ActivityManager
+
+    val memoryInfo =
+        android.app.ActivityManager.MemoryInfo()
+
+    activityManager.getMemoryInfo(memoryInfo)
+
+    val totalMemory =
+        memoryInfo.totalMem / (1024L * 1024L)
+
+    val availableMemory =
+        memoryInfo.availMem / (1024L * 1024L)
+
+    val kvmFile = File("/dev/kvm")
+
+    val kvmStatus = when {
+        !kvmFile.exists() ->
+            "未发现或不可见"
+
+        !kvmFile.canRead() || !kvmFile.canWrite() ->
+            "存在，但应用无法访问"
+
+        else ->
+            "存在且应用可读写"
+    }
+
+    val cpuInfo = try {
+        File("/proc/cpuinfo").readText()
+    } catch (e: Exception) {
+        ""
+    }
+
+    val features = cpuInfo
+        .lineSequence()
+        .firstOrNull {
+            it.startsWith("Features") ||
+            it.startsWith("flags")
+        }
+        ?.substringAfter(":")
+        ?.trim()
+        .orEmpty()
+
+    val featureList =
+        features.split(Regex("\\s+"))
+
+    val importantFeatures = listOf(
+        "aes",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "paca",
+        "bti"
+    )
+
+    val detectedFeatures =
+        importantFeatures.count {
+            featureList.contains(it)
+        }
+
+    val report = buildString {
+        append("iOS Bridge")
+        append("\n设备兼容性综合评估\n\n")
+
+        append("【设备信息】\n")
+        append("型号：")
+        append(android.os.Build.MANUFACTURER)
+        append(" ")
+        append(android.os.Build.MODEL)
+
+        append("\nAndroid：")
+        append(android.os.Build.VERSION.RELEASE)
+
+        append("\nCPU：")
+        append(android.os.Build.SUPPORTED_ABIS.joinToString(", "))
+
+        append("\nCPU 核心数：")
+        append(Runtime.getRuntime().availableProcessors())
+
+        append("\n\n【内存信息】\n")
+        append("总内存：${totalMemory} MB")
+        append("\n可用内存：${availableMemory} MB")
+
+        append("\n\n【CPU 特征】\n")
+        append("已检测到 $detectedFeatures / ")
+        append("${importantFeatures.size} 项特征")
+
+        append("\n\n【虚拟化接口】\n")
+        append("/dev/kvm：")
+        append(kvmStatus)
+
+        append("\n/sys/module/kvm：")
+        append(
+            if (File("/sys/module/kvm").exists())
+                "目录存在"
+            else
+                "未发现或不可见"
+        )
+
+        append("\n/sys/module/kvm_arm：")
+        append(
+            if (File("/sys/module/kvm_arm").exists())
+                "目录存在"
+            else
+                "未发现或不可见"
+        )
+
+        append("\n\n【综合判断】\n")
+        append("ARM64 架构：已确认")
+        append("\nCPU 特征：已读取部分信息")
+        append("\nKVM 应用访问：")
+
+        append(
+            if (kvmFile.exists() &&
+                kvmFile.canRead() &&
+                kvmFile.canWrite()
+            ) {
+                "初步具备访问条件，尚未验证实际 KVM 初始化"
+            } else {
+                "目前未确认具备访问条件"
+            }
+        )
+
+        append("\n\n【结论】\n")
+        append("设备具备现代 ARM64 CPU 特征。")
+        append("\n目前没有证据证明普通应用能够使用 KVM。")
+        append("\n本报告不代表设备能够启动真正的 iOS。")
+
+        append("\n\n所有检测均为只读操作。")
+    }
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("设备兼容性综合评估")
+        .setMessage(report)
+        .setPositiveButton("确定", null)
+        .setNeutralButton("复制报告") { _, _ ->
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "设备兼容性综合评估",
+                    report
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "综合报告已复制",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        .show()
+}
+    
     private fun refreshFiles() {
     fileList.removeAllViews()
 
