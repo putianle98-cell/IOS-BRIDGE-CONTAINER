@@ -122,6 +122,15 @@ val virtualizationButton = Button(this).apply {
 }
 
 root.addView(compatibilityButton)
+val ipaAnalysisButton = Button(this).apply {
+    text = "分析 iOS IPA 应用"
+    setOnClickListener {
+        showIPAAnalysisDialog()
+    }
+}
+
+root.addView(ipaAnalysisButton)
+
         root.addView(statusText)
         root.addView(section)
         
