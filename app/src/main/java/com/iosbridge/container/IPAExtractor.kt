@@ -21,7 +21,7 @@ object IPAExtractor {
             !ipaFile.isFile ||
             ipaFile.extension.lowercase() != "ipa"
         ) {
-            return failure("Invalid IPA file.")
+            return failure("无效的 IPA 文件。")
         }
 
         return try {
@@ -37,7 +37,7 @@ object IPAExtractor {
 
                 val bundlePath = appEntry?.name
                     ?: return failure(
-                        "No Payload application directory found."
+                        "未找到 Payload 应用目录。"
                     )
 
                 val appName = bundlePath
@@ -55,11 +55,11 @@ object IPAExtractor {
                     bundlePath = bundlePath,
                     fileCount = fileCount,
                     extractedPath = "",
-                    message = "IPA structure recognized successfully."
+                    message = "IPA 文件结构识别成功。"
                 )
             }
         } catch (e: Exception) {
-            failure("Unable to inspect IPA: ${e.message}")
+            failure("无法分析 IPA 文件：${e.message}")
         }
     }
 
@@ -69,7 +69,7 @@ object IPAExtractor {
     ): IPAInfo {
 
         if (!ipaFile.exists() || !ipaFile.isFile) {
-            return failure("IPA file does not exist.")
+            return failure("IPA 文件不存在。")
         }
 
         val output = File(
@@ -81,7 +81,7 @@ object IPAExtractor {
             output.mkdirs()
 
             var fileCount = 0
-            var appName = "Unknown"
+            var appName = "未知"
             var bundlePath = ""
 
             ZipFile(ipaFile).use { zip ->
@@ -145,11 +145,11 @@ object IPAExtractor {
                 bundlePath = bundlePath,
                 fileCount = fileCount,
                 extractedPath = output.absolutePath,
-                message = "Extraction completed."
+                message = "文件提取完成。"
             )
 
         } catch (e: Exception) {
-            failure("Extraction failed: ${e.message}")
+            failure("文件提取失败：${e.message}")
         }
     }
 
