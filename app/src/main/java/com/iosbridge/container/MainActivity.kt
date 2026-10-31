@@ -94,10 +94,18 @@ class MainActivity : Activity() {
 
         scrollView.addView(fileList)
 
+val virtualizationButton = Button(this).apply {
+    text = "检测虚拟化能力"
+    setOnClickListener {
+        showVirtualizationReport()
+    }
+}
+        
         root.addView(title)
         root.addView(subtitle)
         root.addView(importButton)
         root.addView(deviceButton)
+        root.addView(virtualizationButton)
         root.addView(statusText)
         root.addView(section)
         
