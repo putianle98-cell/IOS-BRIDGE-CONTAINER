@@ -300,6 +300,7 @@ root.addView(
     }
 
     
+
 private fun refreshFiles() {
     fileList.removeAllViews()
 
@@ -393,9 +394,128 @@ private fun refreshFiles() {
             setPadding(0, 5, 0, 0)
         }
 
+        val actionRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val renameButton = Button(this).apply {
+            text = "重命名"
+            textSize = 12f
+
+            setOnClickListener {
+                val input = EditText(this@MainActivity).apply {
+                    setSingleLine(true)
+                    setText(file.name)
+                    setSelection(text.length)
+                    setPadding(24, 12, 24, 12)
+                }
+
+                val dialog = android.app.AlertDialog.Builder(
+                    this@MainActivity
+                )
+                    .setTitle("重命名文件")
+                    .setView(input)
+                    .setNegativeButton("取消", null)
+                    .setPositiveButton("保存", null)
+                    .create()
+
+                dialog.setOnShowListener {
+                    dialog.getButton(
+                        android.app.AlertDialog.BUTTON_POSITIVE
+                    ).setOnClickListener {
+                        val newName = input.text.toString().trim()
+
+                        if (newName.isBlank()) {
+                            input.error = "文件名不能为空"
+                            return@setOnClickListener
+                        }
+
+                        if (newName.contains("/") ||
+                            newName.contains("\\") ||
+                            newName == "." ||
+                            newName == ".."
+                        ) {
+                            input.error = "文件名包含不允许的字符"
+                            return@setOnClickListener
+                        }
+
+                        val destination = File(containerDir, newName)
+
+                        if (destination.exists()) {
+                            input.error = "这个文件名已经存在"
+                            return@setOnClickListener
+                        }
+
+                        if (file.renameTo(destination)) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "文件重命名成功",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            dialog.dismiss()
+                            refreshFiles()
+                        } else {
+                            input.error = "重命名失败，请重试"
+                        }
+                    }
+                }
+
+                dialog.show()
+            }
+        }
+
+        val deleteButton = Button(this).apply {
+            text = "删除"
+            textSize = 12f
+
+            setOnClickListener {
+                android.app.AlertDialog.Builder(this@MainActivity)
+                    .setTitle("删除文件")
+                    .setMessage("确定要删除「${file.name}」吗？此操作无法撤销。")
+                    .setNegativeButton("取消", null)
+                    .setPositiveButton("确认删除") { _, _ ->
+                        if (file.delete()) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "文件已删除",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            refreshFiles()
+                        } else {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "删除失败，请重试",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    .show()
+            }
+        }
+
+        actionRow.addView(
+            renameButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        actionRow.addView(
+            deleteButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
         item.addView(nameView)
         item.addView(formatView)
         item.addView(sizeView)
+        item.addView(actionRow)
 
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
