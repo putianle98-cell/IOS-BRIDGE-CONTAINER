@@ -53,23 +53,23 @@ object FileAnalyzer {
 
         val description = when (format) {
             "IPA" ->
-                "iOS application package. ZIP-based archive."
+                "iOS 应用安装包，基于 ZIP 压缩格式。"
             "SQLite", "DATABASE" ->
-                "Database file. Structure inspection available."
+                "数据库文件，可以检查数据库结构。"
             "Binary PLIST" ->
-                "Apple binary property list."
+                "Apple 二进制属性列表文件。"
             "PLIST" ->
-                "Apple property list document."
+                "Apple 属性列表文档。"
             "ZIP ARCHIVE" ->
-                "Compressed archive. Contents can be inspected."
+                "压缩文件，可以查看内部内容。"
             "JSON" ->
-                "JavaScript Object Notation document."
+                "JSON 数据交换格式文档。"
             "XML" ->
-                "Extensible Markup Language document."
+                "XML 可扩展标记语言文档。"
             "JPEG IMAGE", "PNG IMAGE" ->
-                "Image file."
+                "图片文件。"
             else ->
-                "Unknown or unsupported file format."
+                "未知或暂不支持的文件格式。"
         }
 
         val supported = format != "UNKNOWN"
@@ -106,7 +106,7 @@ object FileAnalyzer {
 
     private fun formatSize(bytes: Long): String {
         return when {
-            bytes < 1024 -> "$bytes B"
+            bytes < 1024 -> "$bytes 字节"
             bytes < 1024 * 1024 ->
                 "%.2f KB".format(bytes / 1024.0)
             bytes < 1024L * 1024L * 1024L ->
