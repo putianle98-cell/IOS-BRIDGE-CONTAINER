@@ -31,14 +31,14 @@ object IPAExtractor {
                     .toList()
 
                 val appEntry = entries.firstOrNull {
-                    it.name.startsWith("Payload/") &&
-                    it.name.endsWith(".app/")
-                }
+    it.name.startsWith("Payload/") &&
+    it.name.contains(".app/")
+}
 
-                val bundlePath = appEntry?.name
-                    ?: return failure(
-                        "未找到 Payload 应用目录。"
-                    )
+val bundlePath = appEntry?.name
+    ?.substringBefore(".app/")
+    ?.plus(".app/")
+    ?: return failure("未找到 Payload 应用目录。")
 
                 val appName = bundlePath
                     .removePrefix("Payload/")
