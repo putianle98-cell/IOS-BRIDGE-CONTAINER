@@ -554,6 +554,111 @@ private fun showVirtualizationReport() {
         .show()
 }
 
+private fun showCpuAnalysisReport() {
+    val cpuInfo = try {
+        File("/proc/cpuinfo").readText()
+    } catch (e: Exception) {
+        ""
+    }
+
+    val features = cpuInfo
+        .lineSequence()
+        .filter {
+            it.startsWith("Features") ||
+            it.startsWith("flags")
+        }
+        .map {
+            it.substringAfter(":").trim()
+        }
+        .distinct()
+        .firstOrNull()
+        .orEmpty()
+
+    val featureList = features
+        .split(Regex("\\s+"))
+        .filter { it.isNotBlank() }
+
+    val checks = listOf(
+        "AES 加密指令" to "aes",
+        "SHA-1 指令" to "sha1",
+        "SHA-2 指令" to "sha2",
+        "CRC32 指令" to "crc32",
+        "原子操作指令" to "atomics",
+        "指针认证相关特征" to "paca",
+        "分支目标识别特征" to "bti"
+    )
+
+    val report = buildString {
+        append("CPU 与虚拟化能力分析\n\n")
+
+        append("设备：")
+        append(android.os.Build.MANUFACTURER)
+        append(" ")
+        append(android.os.Build.MODEL)
+
+        append("\nCPU 架构：")
+        append(android.os.Build.SUPPORTED_ABIS.joinToString(", "))
+
+        append("\nCPU 核心数：")
+        append(Runtime.getRuntime().availableProcessors())
+
+        append("\n\n指令集特征检查：\n")
+
+        if (featureList.isEmpty()) {
+            append("当前应用无法读取 CPU 特征。\n")
+        } else {
+            for ((name, feature) in checks) {
+                val supported = featureList.contains(feature)
+
+                append(name)
+                append("：")
+                append(if (supported) "检测到" else "未检测到")
+                append("\n")
+            }
+        }
+
+        append("\n虚拟化环境判断：\n")
+        append("KVM 设备节点：")
+        append(
+            if (File("/dev/kvm").exists()) {
+                "存在，但仍需验证访问权限"
+            } else {
+                "未发现或不可见"
+            }
+        )
+
+        append("\n\n分析限制：\n")
+        append("CPU 指令集特征不等于虚拟化功能已经启用。")
+        append("\n普通 Android 应用无法完整读取所有底层硬件状态。")
+        append("\n本模块只进行只读检查，不修改系统。")
+    }
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("CPU 与虚拟化能力分析")
+        .setMessage(report)
+        .setPositiveButton("确定", null)
+        .setNeutralButton("复制报告") { _, _ ->
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "CPU 与虚拟化能力分析",
+                    report
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "分析报告已复制",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        .show()
+}
+
     private fun refreshFiles() {
     fileList.removeAllViews()
 
