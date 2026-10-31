@@ -18,6 +18,9 @@ class MainActivity : Activity() {
     private lateinit var fileList: LinearLayout
     private lateinit var statusText: TextView
 
+    private lateinit var searchInput: EditText
+    private var sortNewestFirst = true
+
     private val containerDir: File by lazy {
         File(filesDir, "IOSBridge/Imported").apply {
             mkdirs()
