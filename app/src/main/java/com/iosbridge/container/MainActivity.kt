@@ -266,23 +266,20 @@ class MainActivity : Activity() {
             ?: "Unable to analyze this file."
 
         val item = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(18, 16, 18, 16)
-            setBackgroundColor(Color.rgb(27, 39, 53))
+    orientation = LinearLayout.VERTICAL
+    setPadding(18, 16, 18, 16)
+    setBackgroundColor(Color.rgb(27, 39, 53))
 
-            setOnClickListener {
-    val intent = Intent(
-        this@MainActivity,
-        FilePreviewActivity::class.java
-    )
+    setOnClickListener {
+        val previewIntent = Intent(
+            this@MainActivity,
+            FilePreviewActivity::class.java
+        ).apply {
+            putExtra("file_path", file.absolutePath)
+        }
 
-    intent.putExtra(
-        "file_path",
-        file.absolutePath
-    )
-
-    startActivity(intent)
-            }
+        startActivity(previewIntent)
+    }
         }
 
         val nameView = TextView(this).apply {
