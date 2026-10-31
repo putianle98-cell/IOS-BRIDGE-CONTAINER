@@ -342,6 +342,7 @@ val virtualizationPaths = listOf(
     "/sys/hypervisor"
 )
 
+
 val virtualizationReport = virtualizationPaths.joinToString("\n") { path ->
     val file = File(path)
 
@@ -352,7 +353,10 @@ val virtualizationReport = virtualizationPaths.joinToString("\n") { path ->
         else -> "存在但无法读取"
     }
 
-    val kernelConfigFiles = listOf(
+    "$path：$status"
+}
+
+val kernelConfigFiles = listOf(
     File("/proc/config.gz"),
     File("/proc/config")
 )
@@ -388,13 +392,28 @@ val kernelConfigReport = buildString {
                     it.startsWith("# $key")
                 }
 
-                append(key)
-                append(result?.removePrefix(key) ?: "未找到")
+                append(result ?: "$key 未找到")
                 append("\n")
             }
         } catch (e: Exception) {
             append("读取失败：${e.javaClass.simpleName}")
         }
+    }
+}
+
+val cpuFeatureReport = try {
+    File("/proc/cpuinfo").readLines()
+        .filter {
+            it.startsWith("Features") ||
+            it.startsWith("flags")
+        }
+        .distinct()
+        .joinToString("\n")
+        .ifBlank { "CPU 特征信息不可读取" }
+} catch (e: Exception) {
+    "读取失败：${e.javaClass.simpleName}"
+}
+
     }
 }
 
