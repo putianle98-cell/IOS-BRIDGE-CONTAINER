@@ -1,4 +1,3 @@
-
 package com.iosbridge.container
 
 import android.app.Activity
@@ -24,7 +23,7 @@ class FilePreviewActivity : Activity() {
         }
 
         val title = TextView(this).apply {
-            text = "FILE PREVIEW"
+            text = "文件详情"
             textSize = 25f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
@@ -51,14 +50,14 @@ class FilePreviewActivity : Activity() {
         val path = intent.getStringExtra("file_path")
 
         if (path.isNullOrBlank()) {
-            addText("ERROR: File path missing.")
+            addText("错误：文件路径不存在。")
             return
         }
 
         val file = File(path)
 
         if (!file.exists() || !file.isFile) {
-            addText("ERROR: File not found.")
+            addText("错误：找不到文件。")
             return
         }
 
@@ -77,8 +76,8 @@ class FilePreviewActivity : Activity() {
 
         val format = analysis?.format ?: "UNKNOWN"
 
-        addText("FORMAT: $format", 14f)
-        addText("SIZE: ${analysis?.size ?: "UNKNOWN"}", 14f)
+        addText("文件格式：$format", 14f)
+        addText("文件大小：${analysis?.size ?: "未知"}", 14f)
         addText("--------------------------------")
 
         when (format) {
@@ -86,18 +85,18 @@ class FilePreviewActivity : Activity() {
             "IPA" -> {
                 val result = IPAExtractor.inspect(file)
 
-                addText("IPA APPLICATION INFORMATION", 18f, true)
-                addText("Success: ${result.success}")
-                addText("Application: ${result.appName}")
-                addText("Bundle path: ${result.bundlePath}")
-                addText("Files: ${result.fileCount}")
+                addText("IPA 应用信息", 18f, true)
+                addText("分析成功：${if (result.success) "是" else "否"}")
+                addText("应用名称：${result.appName}")
+                addText("应用包路径：${result.bundlePath}")
+                addText("文件数量：${result.fileCount}")
                 addText(result.message)
             }
 
             "PLIST", "Binary PLIST" -> {
                 val result = PlistAnalyzer.analyze(file)
 
-                addText("PROPERTY LIST DATA", 18f, true)
+                addText("属性列表数据", 18f, true)
                 addText(result.message)
 
                 result.entries.take(500).forEach {
@@ -108,32 +107,32 @@ class FilePreviewActivity : Activity() {
             "ZIP ARCHIVE" -> {
                 val result = ArchiveAnalyzer.inspect(file)
 
-                addText("ARCHIVE CONTENTS", 18f, true)
-                addText("Files: ${result.totalFiles}")
-                addText("Folders: ${result.totalDirectories}")
-                addText("Uncompressed size: ${result.totalSize} bytes")
+                addText("压缩包内容", 18f, true)
+                addText("文件数量：${result.totalFiles}")
+                addText("文件夹数量：${result.totalDirectories}")
+                addText("解压后大小：${result.totalSize} 字节")
                 addText(result.message)
 
                 result.entries.take(300).forEach {
-                    val type = if (it.isDirectory) "[DIR]" else "[FILE]"
-                    addText("$type ${it.name} (${it.size} bytes)", 12f)
+                    val type = if (it.isDirectory) "[文件夹]" else "[文件]"
+                    addText("$type ${it.name}（${it.size} 字节）", 12f)
                 }
             }
 
             "SQLite", "DATABASE" -> {
                 val result = SQLiteAnalyzer.inspect(file)
 
-                addText("DATABASE STRUCTURE", 18f, true)
+                addText("数据库结构", 18f, true)
                 addText(result.message)
 
                 result.tables.forEach { table ->
-                    addText("TABLE: ${table.name}", 16f, true)
-                    addText("Records: ${table.rowCount}")
+                    addText("数据表：${table.name}", 16f, true)
+                    addText("记录数量：${table.rowCount}")
 
                     table.columns.forEach { column ->
                         addText(
-                            "${column.name} : ${column.type} " +
-                            if (column.primaryKey) "[PRIMARY KEY]" else ""
+                            "${column.name}：${column.type} " +
+                            if (column.primaryKey) "[主键]" else ""
                         )
                     }
                 }
@@ -144,7 +143,7 @@ class FilePreviewActivity : Activity() {
             }
 
             "JSON", "XML" -> {
-                addText("DOCUMENT CONTENT", 18f, true)
+                addText("文档内容", 18f, true)
 
                 try {
                     val preview = file.inputStream().bufferedReader()
@@ -159,15 +158,15 @@ class FilePreviewActivity : Activity() {
                         }
 
                     addText(preview, 12f)
-                    addText("Preview limited to 32 KB.")
+                    addText("预览内容最多显示 32 KB。")
                 } catch (e: Exception) {
-                    addText("Unable to read document: ${e.message}")
+                    addText("无法读取文档：${e.message}")
                 }
             }
 
             else -> {
-                addText("No preview available for this format.")
-                addText(analysis?.description ?: "Unknown file.")
+                addText("暂不支持预览此格式。")
+                addText(analysis?.description ?: "未知文件。")
             }
         }
     }
@@ -203,14 +202,14 @@ class FilePreviewActivity : Activity() {
                 )
 
                 addText(
-                    "Image dimensions: ${bounds.outWidth} × ${bounds.outHeight}"
+                    "图片尺寸：${bounds.outWidth} × ${bounds.outHeight}"
                 )
             } else {
-                addText("Unable to decode image.")
+                addText("无法解码图片。")
             }
 
         } catch (e: Exception) {
-            addText("Image preview failed: ${e.message}")
+            addText("图片预览失败：${e.message}")
         }
     }
 
