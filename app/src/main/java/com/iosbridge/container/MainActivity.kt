@@ -308,7 +308,89 @@ root.addView(
 
     
 
-private fun refreshFiles() {
+    private fun showDeviceReport() {
+    val activityManager =
+        getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
+
+    val memoryInfo = android.app.ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memoryInfo)
+
+    val totalMemory =
+        memoryInfo.totalMem / (1024L * 1024L)
+
+    val availableMemory =
+        memoryInfo.availMem / (1024L * 1024L)
+
+    val cpuArchitecture =
+        android.os.Build.SUPPORTED_ABIS.joinToString("\n")
+
+    val cpuCores =
+        Runtime.getRuntime().availableProcessors()
+
+    val kernelVersion =
+        System.getProperty("os.version") ?: "未知"
+
+    val kvmFile = File("/dev/kvm")
+
+    val kvmStatus = when {
+        !kvmFile.exists() -> "未发现 /dev/kvm"
+        !kvmFile.canRead() || !kvmFile.canWrite() ->
+            "存在，但当前应用无法访问"
+        else -> "存在且当前应用可读写"
+    }
+
+    val report = """
+设备型号：${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}
+
+Android 版本：${android.os.Build.VERSION.RELEASE}
+Android SDK：${android.os.Build.VERSION.SDK_INT}
+
+CPU 架构：
+$cpuArchitecture
+
+可用 CPU 核心数：$cpuCores
+
+Linux 内核版本：
+$kernelVersion
+
+总内存：${totalMemory} MB
+当前可用内存：${availableMemory} MB
+
+虚拟化设备节点：
+$kvmStatus
+
+注意：
+以上结果仅用于初步设备环境检查，
+不能证明设备能够启动 iOS。
+    """.trimIndent()
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("设备环境检测报告")
+        .setMessage(report)
+        .setPositiveButton("确定", null)
+        .setNeutralButton("复制报告") { _, _ ->
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "设备环境检测报告",
+                    report
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "检测报告已复制",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        .show()
+}
+    
+    private fun refreshFiles() {
     fileList.removeAllViews()
 
     val keyword = if (::searchInput.isInitialized) {
