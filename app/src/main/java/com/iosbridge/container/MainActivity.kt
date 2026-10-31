@@ -408,3 +408,5 @@ private fun refreshFiles() {
 
     statusText.text = "显示 ${files.size} 个文件，共 ${allFiles.size} 个文件"
 }
+
+}
