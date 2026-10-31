@@ -34,6 +34,9 @@ class MainActivity : Activity() {
         refreshFiles()
     }
 
+private lateinit var searchInput: EditText
+private var sortNewestFirst = true
+    
     private fun createInterface() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
