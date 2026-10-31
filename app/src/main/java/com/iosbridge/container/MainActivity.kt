@@ -318,7 +318,6 @@ class MainActivity : Activity() {
 
     statusText.text = "${files.size} FILE(S) IN CONTAINER"
     }
-    }
 
     private fun formatSize(bytes: Long): String {
         return when {
