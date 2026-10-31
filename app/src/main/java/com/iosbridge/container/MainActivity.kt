@@ -33,74 +33,76 @@ class MainActivity : Activity() {
         refreshFiles()
     }
 
-    private fun createInterface() {
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 32, 24, 24)
-            setBackgroundColor(Color.rgb(12, 19, 29))
-        }
-
-        val title = TextView(this).apply {
-            text = "iOS Bridge"
-            textSize = 30f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.WHITE)
-        }
-
-        val subtitle = TextView(this).apply {
-            text = "IOS FILE MANAGEMENT ENVIRONMENT"
-            textSize = 11f
-            setTextColor(Color.rgb(95, 177, 220))
-            setPadding(0, 6, 0, 25)
-        }
-
-        val importButton = Button(this).apply {
-            text = "+  IMPORT IOS FILES"
-            setOnClickListener {
-                openFilePicker()
-            }
-        }
-
-        statusText = TextView(this).apply {
-            text = "CONTAINER READY"
-            textSize = 13f
-            setTextColor(Color.rgb(90, 205, 160))
-            setPadding(0, 22, 0, 18)
-        }
-
-        val section = TextView(this).apply {
-            text = "IMPORTED FILES"
-            textSize = 16f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.WHITE)
-            setPadding(0, 8, 0, 14)
-        }
-
-        val scrollView = ScrollView(this)
-
-        fileList = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
-        scrollView.addView(fileList)
-
-        root.addView(title)
-        root.addView(subtitle)
-        root.addView(importButton)
-        root.addView(statusText)
-        root.addView(section)
-
-        root.addView(
-            scrollView,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
-        )
-
-        setContentView(root)
+    
+private fun createInterface() {
+    val root = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(24, 32, 24, 24)
+        setBackgroundColor(Color.rgb(12, 19, 29))
     }
+
+    val title = TextView(this).apply {
+        text = "iOS Bridge"
+        textSize = 30f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(Color.WHITE)
+    }
+
+    val subtitle = TextView(this).apply {
+        text = "iOS 文件管理环境"
+        textSize = 11f
+        setTextColor(Color.rgb(95, 177, 220))
+        setPadding(0, 6, 0, 25)
+    }
+
+    val importButton = Button(this).apply {
+        text = "+  导入 iOS 文件"
+        setOnClickListener {
+            openFilePicker()
+        }
+    }
+
+    statusText = TextView(this).apply {
+        text = "容器已就绪"
+        textSize = 13f
+        setTextColor(Color.rgb(90, 205, 160))
+        setPadding(0, 22, 0, 18)
+    }
+
+    val section = TextView(this).apply {
+        text = "已导入的文件"
+        textSize = 16f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(Color.WHITE)
+        setPadding(0, 8, 0, 14)
+    }
+
+    val scrollView = ScrollView(this)
+
+    fileList = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+    }
+
+    scrollView.addView(fileList)
+
+    root.addView(title)
+    root.addView(subtitle)
+    root.addView(importButton)
+    root.addView(statusText)
+    root.addView(section)
+
+    root.addView(
+        scrollView,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            0,
+            1f
+        )
+    )
+
+    setContentView(root)
+}
+
 
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
