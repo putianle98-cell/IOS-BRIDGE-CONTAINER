@@ -114,6 +114,14 @@ val virtualizationButton = Button(this).apply {
 }
 
         root.addView(cpuAnalysisButton)
+        val compatibilityButton = Button(this).apply {
+    text = "设备兼容性综合评估"
+    setOnClickListener {
+        showCompatibilityReport()
+    }
+}
+
+root.addView(compatibilityButton)
         root.addView(statusText)
         root.addView(section)
         
