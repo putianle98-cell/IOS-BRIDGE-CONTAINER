@@ -316,7 +316,7 @@ class MainActivity : Activity() {
         fileList.addView(item, params)
     }
 
-    statusText.text = "${files.size} FILE(S) IN CONTAINER"
+    statusText.text = "容器中已有 ${files.size} 个文件"
     }
 
     private fun formatSize(bytes: Long): String {
