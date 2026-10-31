@@ -1,4 +1,3 @@
-
 package com.iosbridge.container
 
 import android.database.sqlite.SQLiteDatabase
@@ -28,11 +27,11 @@ object SQLiteAnalyzer {
     fun inspect(file: File): DatabaseResult {
 
         if (!file.exists() || !file.isFile) {
-            return failure("Database file does not exist.")
+            return failure("数据库文件不存在。")
         }
 
         if (file.length() > 512L * 1024 * 1024) {
-            return failure("Database exceeds 512 MB limit.")
+            return failure("数据库文件超过 512 MB 大小限制。")
         }
 
         var database: SQLiteDatabase? = null
@@ -109,11 +108,11 @@ object SQLiteAnalyzer {
             DatabaseResult(
                 success = true,
                 tables = tables,
-                message = "Database inspected successfully."
+                message = "数据库分析成功。"
             )
 
         } catch (e: Exception) {
-            failure("Database inspection failed: ${e.message}")
+            failure("数据库分析失败：${e.message}")
         } finally {
             database?.close()
         }
