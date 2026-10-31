@@ -89,6 +89,69 @@ class MainActivity : Activity() {
         root.addView(importButton)
         root.addView(statusText)
         root.addView(section)
+        
+        val searchRow = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+    gravity = Gravity.CENTER_VERTICAL
+}
+
+searchInput = EditText(this).apply {
+    hint = "搜索文件名称..."
+    textSize = 14f
+    setSingleLine(true)
+    setTextColor(Color.WHITE)
+    setHintTextColor(Color.GRAY)
+    setPadding(14, 8, 14, 8)
+    setBackgroundColor(Color.rgb(27, 39, 53))
+
+    addTextChangedListener(object : android.text.TextWatcher {
+        override fun beforeTextChanged(
+            s: CharSequence?, start: Int, count: Int, after: Int
+        ) {}
+
+        override fun onTextChanged(
+            s: CharSequence?, start: Int, before: Int, count: Int
+        ) {
+            refreshFiles()
+        }
+
+        override fun afterTextChanged(s: android.text.Editable?) {}
+    })
+}
+
+val sortButton = Button(this).apply {
+    text = "最新优先"
+    textSize = 11f
+
+    setOnClickListener {
+        sortNewestFirst = !sortNewestFirst
+        text = if (sortNewestFirst) "最新优先" else "最旧优先"
+        refreshFiles()
+    }
+}
+
+searchRow.addView(
+    searchInput,
+    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+)
+
+searchRow.addView(
+    sortButton,
+    LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+)
+
+root.addView(
+    searchRow,
+    LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    ).apply {
+        bottomMargin = 14
+    }
+)
 
         root.addView(
             scrollView,
