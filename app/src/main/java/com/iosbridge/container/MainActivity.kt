@@ -209,6 +209,71 @@ root.addView(
         setContentView(root)
     }
 
+    private fun showIPAAnalysisDialog() {
+
+    val ipaFiles = containerDir.listFiles()
+        ?.filter {
+            it.isFile &&
+            it.extension.equals("ipa", ignoreCase = true)
+        }
+        ?: emptyList()
+
+    if (ipaFiles.isEmpty()) {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("没有找到 IPA 文件")
+            .setMessage("请先导入一个 iOS IPA 应用安装包。")
+            .setPositiveButton("知道了", null)
+            .show()
+        return
+    }
+
+    val fileNames = ipaFiles.map { it.name }.toTypedArray()
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("选择要分析的 IPA")
+        .setItems(fileNames) { _, which ->
+
+            val ipaFile = ipaFiles[which]
+
+            val structure = IPAExtractor.inspect(ipaFile)
+            val appInfo = IPAExtractor.analyzeAppInfo(ipaFile)
+
+            val report = StringBuilder()
+
+            report.appendLine("文件名称：${ipaFile.name}")
+            report.appendLine("文件大小：${ipaFile.length() / 1024 / 1024} MB")
+            report.appendLine()
+
+            report.appendLine("【IPA 结构】")
+            report.appendLine("分析状态：${structure.message}")
+            report.appendLine("应用目录：${structure.bundlePath}")
+            report.appendLine("内部文件：${structure.fileCount}")
+            report.appendLine()
+
+            report.appendLine("【iOS 应用信息】")
+
+            if (appInfo != null) {
+                report.appendLine("应用名称：${appInfo.appName}")
+                report.appendLine("Bundle ID：${appInfo.bundleIdentifier}")
+                report.appendLine("应用版本：${appInfo.version}")
+                report.appendLine("最低 iOS：${appInfo.minimumOSVersion}")
+                report.appendLine("设备类型：${appInfo.deviceFamily}")
+                report.appendLine("主程序：${appInfo.executable}")
+            } else {
+                report.appendLine("无法读取 Info.plist。")
+                report.appendLine("请确认 IPA 内部包含有效的应用配置文件。")
+            }
+
+            android.app.AlertDialog.Builder(this)
+                .setTitle("IPA 分析报告")
+                .setMessage(report.toString())
+                .setPositiveButton("完成", null)
+                .show()
+        }
+        .setNegativeButton("取消", null)
+        .show()
+    }    
+    
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
