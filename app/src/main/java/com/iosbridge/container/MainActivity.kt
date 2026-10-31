@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
 import java.io.File
+import android.widget.EditText
 
 class MainActivity : Activity() {
 
