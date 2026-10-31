@@ -138,8 +138,9 @@ val families = mutableListOf<Int>()
 if (familyArray != null) {
     for (i in 0 until familyArray.count()) {
         val value = familyArray.objectAtIndex(i)
-            .toString()
-            .toIntOrNull()
+    .toString()
+    .toDoubleOrNull()
+    ?.toInt()
 
         if (value != null) {
             families.add(value)
