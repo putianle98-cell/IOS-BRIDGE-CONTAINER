@@ -482,7 +482,70 @@ $cpuFeatureReport
         }
         .show()
 }
-    
+
+private fun showVirtualizationReport() {
+    val checks = listOf(
+        "/dev/kvm",
+        "/dev/vhost-vsock",
+        "/sys/module/kvm",
+        "/sys/module/kvm_arm",
+        "/sys/hypervisor",
+        "/proc/sys/kernel/osrelease"
+    )
+
+    val report = buildString {
+        append("IRONFRONT / iOS Bridge")
+        append("\n虚拟化能力诊断\n\n")
+
+        for (path in checks) {
+            val file = File(path)
+
+            val status = when {
+                !file.exists() -> "不存在或不可见"
+                file.isDirectory -> "目录存在"
+                file.canRead() && file.canWrite() ->
+                    "存在，可读写"
+                file.canRead() -> "存在，可读取"
+                else -> "存在，但无法访问"
+            }
+
+            append("$path\n$status\n\n")
+        }
+
+        append("CPU 架构：")
+        append(android.os.Build.SUPPORTED_ABIS.joinToString(", "))
+
+        append("\n\n")
+        append("注意：目录存在不代表虚拟化功能可用。")
+        append("\n此检测不会修改系统。")
+    }
+
+    android.app.AlertDialog.Builder(this)
+        .setTitle("虚拟化能力诊断")
+        .setMessage(report)
+        .setPositiveButton("确定", null)
+        .setNeutralButton("复制报告") { _, _ ->
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "虚拟化能力诊断",
+                    report
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "报告已复制",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        .show()
+}
+
     private fun refreshFiles() {
     fileList.removeAllViews()
 
