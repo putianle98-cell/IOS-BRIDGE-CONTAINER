@@ -233,43 +233,97 @@ class MainActivity : Activity() {
     }
 
     private fun refreshFiles() {
-        fileList.removeAllViews()
+    fileList.removeAllViews()
 
-        val files = containerDir.listFiles()
-            ?.filter { it.isFile }
-            ?.sortedByDescending { it.lastModified() }
-            ?: emptyList()
+    val files = containerDir.listFiles()
+        ?.filter { it.isFile }
+        ?.sortedByDescending { it.lastModified() }
+        ?: emptyList()
 
-        if (files.isEmpty()) {
-            val empty = TextView(this).apply {
-                text = "No files imported yet.\nTap IMPORT IOS FILES to begin."
-                textSize = 14f
-                gravity = Gravity.CENTER
-                setTextColor(Color.LTGRAY)
-                setPadding(12, 45, 12, 45)
-            }
-
-            fileList.addView(empty)
-            return
+    if (files.isEmpty()) {
+        val empty = TextView(this).apply {
+            text = "NO FILES FOUND\n\nIMPORT YOUR FIRST IOS FILE"
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(Color.LTGRAY)
+            setPadding(12, 55, 12, 55)
         }
 
-        for (file in files) {
-            val item = TextView(this).apply {
-                text = "📄  ${file.name}\n       ${formatSize(file.length())}"
-                textSize = 14f
-                setTextColor(Color.WHITE)
-                setPadding(16, 18, 16, 18)
-                setBackgroundColor(Color.rgb(27, 39, 53))
-            }
+        fileList.addView(empty)
+        return
+    }
 
-            val params = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-
-            params.bottomMargin = 10
-            fileList.addView(item, params)
+    for (file in files) {
+        val analysis = try {
+            FileAnalyzer.analyze(file)
+        } catch (_: Exception) {
+            null
         }
+
+        val format = analysis?.format ?: "UNKNOWN"
+        val size = analysis?.size ?: "UNKNOWN SIZE"
+        val description = analysis?.description
+            ?: "Unable to analyze this file."
+
+        val item = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(18, 16, 18, 16)
+            setBackgroundColor(Color.rgb(27, 39, 53))
+
+            setOnClickListener {
+                android.app.AlertDialog.Builder(this@MainActivity)
+                    .setTitle(file.name)
+                    .setMessage(
+                        "FILE FORMAT\n$format\n\n" +
+                        "FILE SIZE\n$size\n\n" +
+                        "DESCRIPTION\n$description"
+                    )
+                    .setPositiveButton("CLOSE", null)
+                    .setNeutralButton("DELETE") { _, _ ->
+                        if (file.delete()) {
+                            refreshFiles()
+                        }
+                    }
+                    .show()
+            }
+        }
+
+        val nameView = TextView(this).apply {
+            text = "📄  ${file.name}"
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+        }
+
+        val formatView = TextView(this).apply {
+            text = "FORMAT: $format"
+            textSize = 12f
+            setTextColor(Color.rgb(54, 185, 246))
+            setPadding(0, 9, 0, 0)
+        }
+
+        val sizeView = TextView(this).apply {
+            text = "SIZE: $size"
+            textSize = 12f
+            setTextColor(Color.LTGRAY)
+            setPadding(0, 5, 0, 0)
+        }
+
+        item.addView(nameView)
+        item.addView(formatView)
+        item.addView(sizeView)
+
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        params.bottomMargin = 12
+        fileList.addView(item, params)
+    }
+
+    statusText.text = "${files.size} FILE(S) IN CONTAINER"
+    }
     }
 
     private fun formatSize(bytes: Long): String {
