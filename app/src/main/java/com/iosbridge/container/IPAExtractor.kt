@@ -63,6 +63,55 @@ object IPAExtractor {
         }
     }
 
+    fun analyzeAppInfo(ipaFile: File): PlistAnalyzer.IOSAppInfo? {
+
+    if (!ipaFile.exists() ||
+        !ipaFile.isFile ||
+        ipaFile.extension.lowercase() != "ipa"
+    ) {
+        return null
+    }
+
+    return try {
+        ZipFile(ipaFile).use { zip ->
+
+            val entries = zip.entries()
+
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+
+                if (entry.isDirectory ||
+                    !entry.name.startsWith("Payload/") ||
+                    !entry.name.endsWith(".app/Info.plist")
+                ) {
+                    continue
+                }
+
+                val tempFile = File.createTempFile(
+                    "iosbridge_",
+                    ".plist"
+                )
+
+                try {
+                    zip.getInputStream(entry).use { input ->
+                        tempFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+
+                    return PlistAnalyzer.analyzeIOSApp(tempFile)
+                } finally {
+                    tempFile.delete()
+                }
+            }
+
+            null
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+    
     fun extract(
         ipaFile: File,
         outputDirectory: File
