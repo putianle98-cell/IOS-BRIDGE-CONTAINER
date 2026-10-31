@@ -106,6 +106,14 @@ val virtualizationButton = Button(this).apply {
         root.addView(importButton)
         root.addView(deviceButton)
         root.addView(virtualizationButton)
+        val cpuAnalysisButton = Button(this).apply {
+    text = "CPU 与虚拟化能力分析"
+    setOnClickListener {
+        showCpuAnalysisReport()
+    }
+}
+
+        root.addView(cpuAnalysisButton)
         root.addView(statusText)
         root.addView(section)
         
