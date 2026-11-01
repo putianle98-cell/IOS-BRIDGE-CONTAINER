@@ -94,6 +94,26 @@ class FilePreviewActivity : Activity() {
                     "通用二进制：${if (result.isUniversal) "是" else "否"}"
                 )
                 addText("分析说明：${result.message}")
+                addText("--------------------------------")
+                addText("系统依赖分析", 18f, true)
+
+                addText("目标平台：${result.platform}")
+                addText("最低系统版本：${result.minimumOS}")
+
+                addText("--------------------------------")
+                addText(
+                    "动态库依赖（${result.dependencies.size} 项）",
+                    16f,
+                    true
+                )
+
+                if (result.dependencies.isEmpty()) {
+                    addText("没有检测到动态库依赖，或文件未提供相关加载命令。")
+                } else {
+                    result.dependencies.take(200).forEach {
+                        addText(it, 12f)
+                    }
+                }
 
                 if (result.success) {
                     addText("--------------------------------")
