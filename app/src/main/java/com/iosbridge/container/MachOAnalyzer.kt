@@ -245,4 +245,182 @@ object MachOAnalyzer {
             message = message
         )
     }
+
+  private data class LoadInfo(
+        val dependencies: List<String>,
+        val minimumOS: String,
+        val platform: String
+    )
+
+    private fun analyzeLoadCommands(
+        raf: RandomAccessFile,
+        order: ByteOrder,
+        is64Bit: Boolean
+    ): LoadInfo {
+
+        val headerSize = if (is64Bit) 32L else 28L
+
+        raf.seek(16)
+        val headerData = ByteArray(8)
+        raf.readFully(headerData)
+
+        val headerBuffer = ByteBuffer.wrap(headerData).order(order)
+        val commandCount = headerBuffer.getInt(0)
+        val commandBytes = headerBuffer.getInt(4)
+
+        if (
+            commandCount < 0 ||
+            commandCount > 10000 ||
+            commandBytes < 0 ||
+            commandBytes > 16 * 1024 * 1024 ||
+            headerSize + commandBytes > raf.length()
+        ) {
+            return LoadInfo(
+                emptyList(),
+                "加载命令无效",
+                "未检测到"
+            )
+        }
+
+        val dependencies = mutableListOf<String>()
+        var minimumOS = "未检测到"
+        var platform = "未检测到"
+
+        var position = headerSize
+        val end = headerSize + commandBytes
+
+        repeat(commandCount) {
+
+            if (position + 8 > end) {
+                return@repeat
+            }
+
+            raf.seek(position)
+
+            val commandHeader = ByteArray(8)
+            raf.readFully(commandHeader)
+
+            val commandBuffer =
+                ByteBuffer.wrap(commandHeader).order(order)
+
+            val command = commandBuffer.getInt(0)
+            val commandSize = commandBuffer.getInt(4)
+
+            if (
+                commandSize < 8 ||
+                position + commandSize > end
+            ) {
+                return LoadInfo(
+                    dependencies,
+                    "加载命令结构异常",
+                    platform
+                )
+            }
+
+            when (command) {
+
+                0x0C,
+                0x18,
+                0x1F,
+                0x20,
+                0x80000018.toInt(),
+                0x8000001F.toInt(),
+                0x80000023.toInt() -> {
+
+                    if (commandSize >= 24) {
+                        val data = ByteArray(commandSize)
+                        raf.seek(position)
+                        raf.readFully(data)
+
+                        val buffer =
+                            ByteBuffer.wrap(data).order(order)
+
+                        val nameOffset = buffer.getInt(8)
+
+                        if (
+                            nameOffset >= 8 &&
+                            nameOffset < commandSize
+                        ) {
+                            val name = String(
+                                data,
+                                nameOffset,
+                                commandSize - nameOffset,
+                                Charsets.UTF_8
+                            ).substringBefore('\u0000')
+
+                            if (
+                                name.isNotBlank() &&
+                                !dependencies.contains(name)
+                            ) {
+                                dependencies.add(name)
+                            }
+                        }
+                    }
+                }
+
+                0x24 -> {
+                    if (commandSize >= 16) {
+                        val data = ByteArray(16)
+                        raf.seek(position)
+                        raf.readFully(data)
+
+                        val buffer =
+                            ByteBuffer.wrap(data).order(order)
+
+                        minimumOS = formatVersion(buffer.getInt(8))
+                        platform = "macOS"
+                    }
+                }
+
+                0x32 -> {
+                    if (commandSize >= 24) {
+                        val data = ByteArray(24)
+                        raf.seek(position)
+                        raf.readFully(data)
+
+                        val buffer =
+                            ByteBuffer.wrap(data).order(order)
+
+                        val platformId = buffer.getInt(8)
+                        val version = buffer.getInt(12)
+
+                        platform = when (platformId) {
+                            1 -> "macOS"
+                            2 -> "iOS"
+                            3 -> "tvOS"
+                            4 -> "watchOS"
+                            5 -> "桥接系统"
+                            6 -> "Mac Catalyst"
+                            7 -> "iOS Simulator"
+                            8 -> "tvOS Simulator"
+                            9 -> "watchOS Simulator"
+                            10 -> "DriverKit"
+                            11 -> "visionOS"
+                            12 -> "visionOS Simulator"
+                            else -> "未知平台 ($platformId)"
+                        }
+
+                        minimumOS = formatVersion(version)
+                    }
+                }
+            }
+
+            position += commandSize
+        }
+
+        return LoadInfo(
+            dependencies,
+            minimumOS,
+            platform
+        )
+    }
+
+    private fun formatVersion(version: Int): String {
+        val major = (version ushr 16) and 0xFFFF
+        val minor = (version ushr 8) and 0xFF
+        val patch = version and 0xFF
+
+        return "$major.$minor.$patch"
+    }
+    
 }
