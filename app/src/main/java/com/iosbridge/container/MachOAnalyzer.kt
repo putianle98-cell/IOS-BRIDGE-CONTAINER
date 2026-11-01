@@ -8,13 +8,16 @@ import java.nio.ByteOrder
 
 object MachOAnalyzer {
 
-    data class MachOInfo(
+        data class MachOInfo(
         val success: Boolean,
         val format: String,
         val architecture: String,
         val fileType: String,
         val isUniversal: Boolean,
-        val message: String
+        val message: String,
+        val dependencies: List<String> = emptyList(),
+        val minimumOS: String = "未检测到",
+        val platform: String = "未检测到"
     )
 
     fun analyze(file: File): MachOInfo {
