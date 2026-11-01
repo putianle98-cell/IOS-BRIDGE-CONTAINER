@@ -80,7 +80,41 @@ object FileAnalyzer {
             else -> detectTextFormat(file)
         }
 
-    private fun detectTextFormat(file: File): String {
+    val description = when (format) {
+            "IPA" ->
+                "iOS 应用安装包，基于 ZIP 压缩格式。"
+            "Mach-O" ->
+                "Apple Mach-O 可执行文件，可以分析 CPU 架构和程序类型。"
+            "SQLite", "DATABASE" ->
+                "数据库文件，可以检查数据库结构。"
+            "Binary PLIST" ->
+                "Apple 二进制属性列表文件。"
+            "PLIST" ->
+                "Apple 属性列表文档。"
+            "ZIP ARCHIVE" ->
+                "压缩文件，可以查看内部内容。"
+            "JSON" ->
+                "JSON 数据交换格式文档。"
+            "XML" ->
+                "XML 可扩展标记语言文档。"
+            "JPEG IMAGE", "PNG IMAGE" ->
+                "图片文件。"
+            else ->
+                "未知或暂不支持的文件格式。"
+        }
+
+        val supported = format != "UNKNOWN"
+
+        return AnalysisResult(
+            name = file.name,
+            format = format,
+            size = formatSize(file.length()),
+            description = description,
+            supported = supported
+        )
+    }
+        
+        private fun detectTextFormat(file: File): String {
         return try {
             val text = file.inputStream().bufferedReader()
                 .use { it.readText().take(4096) }
