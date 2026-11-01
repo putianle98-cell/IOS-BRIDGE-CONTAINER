@@ -13,7 +13,18 @@ object FileAnalyzer {
         val supported: Boolean
     )
 
+    
     fun analyze(file: File): AnalysisResult {
+
+        if (!file.exists() || !file.isFile) {
+            return AnalysisResult(
+                file.name,
+                "UNKNOWN",
+                "未知",
+                "文件不存在。",
+                false
+            )
+        }
 
         val header = ByteArray(16)
 
@@ -29,7 +40,6 @@ object FileAnalyzer {
 
         val extension = file.extension.lowercase()
 
-        
         val isMachO = signature.size >= 4 && (
             signature.startsWithBytes(
                 byteArrayOf(0xFE.toByte(), 0xED.toByte(), 0xFA.toByte(), 0xCE.toByte())
@@ -80,7 +90,7 @@ object FileAnalyzer {
             else -> detectTextFormat(file)
         }
 
-    val description = when (format) {
+        val description = when (format) {
             "IPA" ->
                 "iOS 应用安装包，基于 ZIP 压缩格式。"
             "Mach-O" ->
@@ -103,16 +113,15 @@ object FileAnalyzer {
                 "未知或暂不支持的文件格式。"
         }
 
-        val supported = format != "UNKNOWN"
-
         return AnalysisResult(
             name = file.name,
             format = format,
             size = formatSize(file.length()),
             description = description,
-            supported = supported
+            supported = format != "UNKNOWN"
         )
     }
+
         
         private fun detectTextFormat(file: File): String {
         return try {
