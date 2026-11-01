@@ -111,7 +111,10 @@ object MachOAnalyzer {
             architecture = architectureName(cpuType, cpuSubtype),
             fileType = fileTypeName(fileType),
             isUniversal = false,
-            message = "Mach-O 文件头识别成功。"
+                message = "Mach-O 文件头识别成功。",
+            dependencies = loadInfo.dependencies,
+            minimumOS = loadInfo.minimumOS,
+            platform = loadInfo.platform
         )
     }
 
