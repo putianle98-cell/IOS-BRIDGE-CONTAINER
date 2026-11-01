@@ -264,6 +264,22 @@ root.addView(
                 report.appendLine("无法读取 Info.plist。")
                 report.appendLine("请确认 IPA 内部包含有效的应用配置文件。")
             }
+            report.appendLine()
+            report.appendLine("【Mach-O 主程序分析】")
+
+            if (machoInfo != null && machoInfo.success) {
+                report.appendLine("文件格式：${machoInfo.format}")
+                report.appendLine("CPU 架构：${machoInfo.architecture}")
+                report.appendLine("文件类型：${machoInfo.fileType}")
+                report.appendLine(
+                    "通用二进制：${if (machoInfo.isUniversal) "是" else "否"}"
+                )
+                report.appendLine("分析结果：${machoInfo.message}")
+            } else {
+                report.appendLine(
+                    machoInfo?.message ?: "无法定位或读取 IPA 主程序。"
+                )
+            }
 
             android.app.AlertDialog.Builder(this)
                 .setTitle("IPA 分析报告")
