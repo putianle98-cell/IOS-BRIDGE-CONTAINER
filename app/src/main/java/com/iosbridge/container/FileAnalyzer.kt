@@ -29,8 +29,37 @@ object FileAnalyzer {
 
         val extension = file.extension.lowercase()
 
+        
+        val isMachO = signature.size >= 4 && (
+            signature.startsWithBytes(
+                byteArrayOf(0xFE.toByte(), 0xED.toByte(), 0xFA.toByte(), 0xCE.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xCE.toByte(), 0xFA.toByte(), 0xED.toByte(), 0xFE.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xFE.toByte(), 0xED.toByte(), 0xFA.toByte(), 0xCF.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xCF.toByte(), 0xFA.toByte(), 0xED.toByte(), 0xFE.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xCA.toByte(), 0xFE.toByte(), 0xBA.toByte(), 0xBE.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xBE.toByte(), 0xBA.toByte(), 0xFE.toByte(), 0xCA.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xCA.toByte(), 0xFE.toByte(), 0xBA.toByte(), 0xBF.toByte())
+            ) ||
+            signature.startsWithBytes(
+                byteArrayOf(0xBF.toByte(), 0xBA.toByte(), 0xFE.toByte(), 0xCA.toByte())
+            )
+        )
+
         val format = when {
             extension == "ipa" -> "IPA"
+            isMachO -> "Mach-O"
             signature.startsWithBytes(
                 "SQLite format 3\u0000".toByteArray()
             ) -> "SQLite"
@@ -50,38 +79,6 @@ object FileAnalyzer {
             extension == "zip" -> "ZIP ARCHIVE"
             else -> detectTextFormat(file)
         }
-
-        val description = when (format) {
-            "IPA" ->
-                "iOS 应用安装包，基于 ZIP 压缩格式。"
-            "SQLite", "DATABASE" ->
-                "数据库文件，可以检查数据库结构。"
-            "Binary PLIST" ->
-                "Apple 二进制属性列表文件。"
-            "PLIST" ->
-                "Apple 属性列表文档。"
-            "ZIP ARCHIVE" ->
-                "压缩文件，可以查看内部内容。"
-            "JSON" ->
-                "JSON 数据交换格式文档。"
-            "XML" ->
-                "XML 可扩展标记语言文档。"
-            "JPEG IMAGE", "PNG IMAGE" ->
-                "图片文件。"
-            else ->
-                "未知或暂不支持的文件格式。"
-        }
-
-        val supported = format != "UNKNOWN"
-
-        return AnalysisResult(
-            name = file.name,
-            format = format,
-            size = formatSize(file.length()),
-            description = description,
-            supported = supported
-        )
-    }
 
     private fun detectTextFormat(file: File): String {
         return try {
