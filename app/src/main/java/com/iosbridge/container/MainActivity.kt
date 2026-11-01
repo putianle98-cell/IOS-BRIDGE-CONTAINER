@@ -237,6 +237,7 @@ root.addView(
 
             val structure = IPAExtractor.inspect(ipaFile)
             val appInfo = IPAExtractor.analyzeAppInfo(ipaFile)
+            val machoInfo = IPAExtractor.analyzeMainExecutable(ipaFile)
 
             val report = StringBuilder()
 
