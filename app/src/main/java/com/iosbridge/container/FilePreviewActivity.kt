@@ -82,6 +82,29 @@ class FilePreviewActivity : Activity() {
 
         when (format) {
 
+         "Mach-O" -> {
+                val result = MachOAnalyzer.analyze(file)
+
+                addText("Mach-O 可执行文件分析", 18f, true)
+                addText("分析状态：${if (result.success) "成功" else "失败"}")
+                addText("文件格式：${result.format}")
+                addText("CPU 架构：${result.architecture}")
+                addText("文件类型：${result.fileType}")
+                addText(
+                    "通用二进制：${if (result.isUniversal) "是" else "否"}"
+                )
+                addText("分析说明：${result.message}")
+
+                if (result.success) {
+                    addText("--------------------------------")
+                    addText("兼容性提示", 16f, true)
+                    addText(
+                        "识别到的 CPU 架构仅代表文件包含相应机器代码，" +
+                        "不代表当前 Android 系统能够直接运行该程序。"
+                    )
+                }
+         }   
+            
             "IPA" -> {
                 val result = IPAExtractor.inspect(file)
 
