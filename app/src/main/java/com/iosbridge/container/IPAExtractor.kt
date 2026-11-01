@@ -107,6 +107,61 @@ val bundlePath = appEntry?.name
     }
 }
     
+    fun analyzeMainExecutable(ipaFile: File): MachOAnalyzer.MachOInfo? {
+
+    val structure = inspect(ipaFile)
+
+    if (!structure.success || structure.bundlePath.isEmpty()) {
+        return null
+    }
+
+    val appInfo = analyzeAppInfo(ipaFile)
+        ?: return null
+
+    if (appInfo.executable == "未知" ||
+        appInfo.executable.isBlank() ||
+        appInfo.executable.contains("/") ||
+        appInfo.executable.contains("\\")
+    ) {
+        return null
+    }
+
+    return try {
+        ZipFile(ipaFile).use { zip ->
+
+            val executablePath =
+                structure.bundlePath + appInfo.executable
+
+            val entry = zip.getEntry(executablePath)
+                ?: return@use null
+
+            if (entry.isDirectory || entry.size > 512L * 1024 * 1024) {
+                return@use null
+            }
+
+            val tempFile = File.createTempFile(
+                "iosbridge_macho_",
+                ".bin"
+            )
+
+            try {
+                zip.getInputStream(entry).use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                MachOAnalyzer.analyze(tempFile)
+
+            } finally {
+                tempFile.delete()
+            }
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+    
     fun extract(
         ipaFile: File,
         outputDirectory: File
